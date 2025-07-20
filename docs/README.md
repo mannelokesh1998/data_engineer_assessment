@@ -115,14 +115,23 @@ property (1) → rehab (M)     # One-to-many
 
 ## Workflow
 
-### Step 1: Load Raw JSON into Initial DB
+### Step 1: Create Initial Database Schema
 
 ```bash
-python scripts/load_initial_db.py
+mysql -h localhost -P 3306 -u db_user -p6equj5_db_user home_db < sql/01_initial_tables_schema.sql
+```
+
+**Creates staging tables for raw data ingestion.**
+
+### Step 2: Load Raw JSON into Initial DB
+
+```bash
+python scripts/read_raw_file_ingest_into_initial_db.py
 ```
 
 **This script:**
 - Reads `data/fake_property_data.json`
+- References field configuration from `data/Field Config.xlsx`
 - Inserts raw data into staging tables:
   - `property_raw`
   - `valuation_raw`
@@ -130,10 +139,10 @@ python scripts/load_initial_db.py
   - `rehab_raw`
   - `taxes_raw`
 
-### Step 2: Clean and Transform Data
+### Step 3: Data Cleaning and Pre-Processing
 
 ```bash
-mysql -h localhost -P 3306 -u db_user -p6equj5_db_user home_db < sql/clean_staging.sql
+mysql -h localhost -P 3306 -u db_user -p6equj5_db_user home_db < sql/02_data_cleaning_test_pre_processing.sql
 ```
 
 **Transformations applied:**
@@ -141,11 +150,20 @@ mysql -h localhost -P 3306 -u db_user -p6equj5_db_user home_db < sql/clean_stagi
 - Replace NULLs with appropriate defaults
 - Normalize boolean flags
 - Ensure data types match final schema requirements
+- Run data quality tests
 
-### Step 3: Upsert into Final Normalized DB
+### Step 4: Create Final Database Schema
 
 ```bash
-python scripts/etl_upsert_final.py
+mysql -h localhost -P 3307 -u db_user -p6equj5_db_user home_db < sql/03_final_tables_schema.sql
+```
+
+**Creates normalized tables in the final database.**
+
+### Step 5: Transform and Load into Final DB
+
+```bash
+python scripts/etl_transform_to_final.py
 ```
 
 **This ETL script:**
@@ -155,22 +173,33 @@ python scripts/etl_upsert_final.py
 - Uses `INSERT ... ON DUPLICATE KEY UPDATE` for idempotency
 - Maintains referential integrity through foreign keys
 
+### Step 6: Post-Transformation Testing
+
+```bash
+mysql -h localhost -P 3307 -u db_user -p6equj5_db_user home_db < sql/04_post_transformation_test.sql
+```
+
+**Validates the final transformed data and relationships.**
+
 ## Project Structure
 
 ```
 .
 ├── data/
-│   └── fake_property_data.json      # Input JSON data
+│   ├── fake_property_data.json                  # Input JSON data
+│   └── Field Config.xlsx                        # Field configuration and data types
 ├── scripts/
-│   ├── load_initial_db.py           # Stage raw JSON → initial DB
-│   └── etl_upsert_final.py         # Transform & load → final DB
+│   ├── load_initial_db.py                       # Legacy script (if needed)
+│   ├── read_raw_file_ingest_into_initial_db.py  # Stage raw JSON → initial DB
+│   └── etl_transform_to_final.py                # Transform & load → final DB
 ├── sql/
-│   ├── initial_schema.sql           # Staging table definitions
-│   ├── final_schema.sql            # Normalized schema definitions
-│   └── clean_staging.sql           # Data cleanup & deduplication
-├── requirements.txt                 # Python dependencies
-├── docker-compose.initial.yml      # Database setup
-└── README.md                       # This file
+│   ├── 01_initial_tables_schema.sql             # Initial/staging table definitions
+│   ├── 02_data_cleaning_test_pre_processing.sql # Data cleanup & validation
+│   ├── 03_final_tables_schema.sql               # Normalized schema definitions
+│   └── 04_post_transformation_test.sql          # Final data validation tests
+├── requirements.txt                             # Python dependencies
+├── docker-compose.initial.yml                   # Database setup
+└── README.md                                    # This file
 ```
 
 ## Testing
@@ -199,8 +228,18 @@ SELECT COUNT(*) FROM rehab;
 ### Test Idempotency
 Run the ETL pipeline multiple times to ensure no duplicates are created:
 ```bash
-python scripts/etl_upsert_final.py
-python scripts/etl_upsert_final.py  # Should not create duplicates
+python scripts/etl_transform_to_final.py
+python scripts/etl_transform_to_final.py  # Should not create duplicates
+```
+
+### Run All Tests
+Execute the complete test suite:
+```bash
+# Pre-processing tests
+mysql -h localhost -P 3306 -u db_user -p6equj5_db_user home_db < sql/02_data_cleaning_test_pre_processing.sql
+
+# Post-transformation tests
+mysql -h localhost -P 3307 -u db_user -p6equj5_db_user home_db < sql/04_post_transformation_test.sql
 ```
 
 ## Submission Guidelines
@@ -226,9 +265,10 @@ python scripts/etl_upsert_final.py  # Should not create duplicates
 ## Notes
 
 ### Assumptions
-- Data types were inferred based on `Field Config.xlsx`
+- Data types and field configurations are defined in `Field Config.xlsx`
 - Default values for NULL fields follow business logic assumptions
 - Boolean flags are normalized to consistent format (0/1)
+- SQL scripts are executed in numbered sequence (01, 02, 03, 04)
 
 ### Limitations
 - Some NULL and flag handling may require further clarification from stakeholders
