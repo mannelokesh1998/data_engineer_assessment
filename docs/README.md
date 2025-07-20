@@ -50,7 +50,7 @@ pandas>=1.5.0
 
 1. **Clone the repository:**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/mannelokesh1998/data_engineer_assessment.git
    cd data_engineer_assessment
    ```
 
