@@ -244,50 +244,24 @@ mysql -h localhost -P 3307 -u db_user -p6equj5_db_user home_db < sql/04_post_tra
 
 ## Submission Guidelines
 
-1. **Create a feature branch:**
-   ```bash
-   git checkout -b feature/etl-cleanup
-   ```
-
-2. **Commit your changes:**
-   ```bash
-   git add .
-   git commit -m "Final ETL implementation and documentation"
-   ```
-
-3. **Push and create PR:**
-   ```bash
-   git push origin feature/etl-cleanup
-   ```
-
-4. **Create a Pull Request** on GitHub for review
-
-## Notes
-
-### Assumptions
-- Data types and field configurations are defined in `Field Config.xlsx`
-- Default values for NULL fields follow business logic assumptions
-- Boolean flags are normalized to consistent format (0/1)
-- SQL scripts are executed in numbered sequence (01, 02, 03, 04)
-
-### Limitations
-- Some NULL and flag handling may require further clarification from stakeholders
-- Error handling could be enhanced for production use
-- Data validation rules are based on sample data patterns
-
-### Next Steps
-- Add comprehensive CI/CD tests to validate ETL correctness
-- Implement data quality monitoring
-- Add logging and error handling improvements
-- Consider adding data lineage tracking
+- Edit the section to the bottom of this README with your solutions and instructions for each section at the bottom.
+- Place all scripts/code in their respective folders (`sql/`, `scripts/`, etc.)
+- Ensure all steps are fully **reproducible** using your documentation
+- Create a new private repo and invite the reviewer https://github.com/mantreshjain
 
 ---
 
-## Solutions Summary
+**Good luck! We look forward to your submission.**
 
-✅ **Schema Design:** Normalized to 3NF with clear one-to-many relationships  
-✅ **ETL Logic:** JSON → staging → cleanup → upsert into normalized schema  
-✅ **Idempotency:** Pipeline can be run multiple times safely  
-✅ **Data Quality:** Deduplication and validation built into process
+## Solutions and Instructions (Filed by Candidate)
 
-For questions or issues, please refer to the documentation or create an issue in the repository.
+**Document your database design and solution here:**
+
+- Explain your schema and any design decisions
+- Give clear instructions on how to run and test your script
+
+**Document your ETL logic here:**
+
+- Outline your approach and design
+- Provide instructions and code snippets for running the ETL
+- List any requirements
